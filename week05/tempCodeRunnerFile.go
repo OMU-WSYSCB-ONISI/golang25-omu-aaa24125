@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"net/http"
 	"runtime"
 	"strconv"
@@ -19,9 +18,6 @@ func main() {
 	http.HandleFunc("/cal00", cal00handler)
 	http.HandleFunc("/cal01", calpmhandler)
 	http.HandleFunc("/sum", sumhandler)
-	http.HandleFunc("/bmi", bmihandler)
-	http.HandleFunc("/cal02", calallhandler)
-	http.HandleFunc("/avgdist", avgdisthandler)
 
 	fmt.Println("Launch server...")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
@@ -88,84 +84,4 @@ func sumhandler(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Fprintln(w, sum)
 	fmt.Println(sum)
-}
-
-func bmihandler(w http.ResponseWriter, r *http.Request) {
-    if err := r.ParseForm(); err != nil {
-        fmt.Println("errorだよ")
-    }
-
-    w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-    weight, _ := strconv.ParseFloat(r.FormValue("weight"), 64)
-    height, _ := strconv.ParseFloat(r.FormValue("height"), 64)
-    if height == 0 {
-        fmt.Fprintln(w, "身長が0なので計算できません")
-        return
-    }
-    bmi := weight / math.Pow(height/100, 2)
-    fmt.Fprintf(w, "BMI値は %.1f です<br>", bmi)
-}
-
-func calallhandler(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		fmt.Println("errorだよ")
-	}
-	x, _ := strconv.Atoi(r.FormValue("x"))
-	y, _ := strconv.Atoi(r.FormValue("y"))
-	switch r.FormValue("cal1") {
-	case "+":
-		fmt.Fprintln(w, x+y)
-	case "-":
-		fmt.Fprintln(w, x-y)
-	case "*":
-		fmt.Fprintln(w, x*y)
-	case "/":
-		if y == 0 {
-			fmt.Fprintln(w, "0で割ることはできません")
-		} else {
-			fmt.Fprintln(w, float64(x)/float64(y))
-		}
-	}
-}
-
-// 平均と得点分布
-func avgdisthandler(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		fmt.Println("errorだよ")
-	}
-	tokuten := strings.Split(r.FormValue("scores"), ",")
-	var sum, count int
-	dosuu := [10]int{}
-	for _, s := range tokuten {
-		val, _ := strconv.Atoi(strings.TrimSpace(s))
-		sum += val
-		count++
-		if val >= 90 {
-			dosuu[0]++
-		} else if val >= 80 {
-			dosuu[1]++
-		} else if val >= 70 {
-			dosuu[2]++
-		} else if val >= 60 {
-			dosuu[3]++
-		} else if val >= 50 {
-			dosuu[4]++
-		} else if val >= 40 {
-			dosuu[5]++
-		} else if val >= 30 {
-			dosuu[6]++
-		} else if val >= 20 {
-			dosuu[7]++
-		} else if val >= 10 {
-			dosuu[8]++
-		} else {
-			dosuu[9]++
-		}
-	}
-	avg := float64(sum) / float64(count)
-	fmt.Fprintf(w, "平均点は %.1f です\n", avg)
-	for k := 0; k < 10; k++ {
-		fmt.Fprintf(w, "%d点以上は %d 人です\n", 100-(k+1)*10, dosuu[k])
-	}
 }
